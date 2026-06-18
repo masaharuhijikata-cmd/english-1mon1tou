@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学英語 単語フラッシュカード Premium</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        h1 {
+            font-size: 18px;
+            color: #5f6368;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        /* モード切り替えスイッチ */
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            background-color: #f1f3f4;
+            color: #3c4043;
+            border: 1px solid #dadce0;
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .mode-btn.active {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            border-color: #1a73e8;
+        }
+        .progress {
+            font-size: 14px;
+            color: #80868b;
+            margin-bottom: 10px;
+        }
+        /* カード部分 */
+        .card-box {
+            background-color: #f8f9fa;
+            border: 2px solid #e8f0fe;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        /* 問題テキスト */
+        .question-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #202124;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        .hint-text {
+            font-size: 14px;
+            color: #1a73e8;
+            background: #e8f0fe;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        /* 答えテキスト */
+        .answer-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d93025;
+            border-top: 2px dashed #dadce0;
+            padding-top: 15px;
+            width: 100%;
+            line-height: 1.4;
+            /* 最初は隠す */
+            visibility: hidden; 
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        /* 答えを表示したときのクラス */
+        .card-box.show-answer .answer-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* ボタンエリア */
+        .control-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        button.action-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+        }
+        .show-btn {
+            background-color: #1a73e8;
+            color: white;
+        }
+        .show-btn:hover {
+            background-color: #1557b0;
+        }
+        .next-btn {
+            background-color: #f8f9fa;
+            color: #3c4043;
+            border: 2px solid #dadce0;
+            display: none;
+        }
+        .next-btn:hover {
+            background-color: #f1f3f4;
+            border-color: #bdc1c6;
+        }
+        
+        /* 結果画面 */
+        #result-screen {
+            display: none;
+        }
+        .restart-btn {
+            background-color: #1a73e8;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- クイズ（カード）画面 -->
+    <div id="game-screen">
+        <h1>中学英語 単語カード</h1>
+        
+        <!-- モード切り替えボタン -->
+        <div class="mode-selector">
+            <button class="mode-btn active" id="mode-jp-to-en" onclick="changeMode('jp-to-en')">日 ➔ 英</button>
+            <button class="mode-btn" id="mode-en-to-jp" onclick="changeMode('en-to-jp')">英 ➔ 日</button>
+        </div>
+
+        <div class="progress" id="progress">1 / 15</div>
+        
+        <!-- カード -->
+        <div class="card-box" id="card">
+            <div class="question-text" id="question-text">問題</div>
+            <div class="hint-text" id="hint-text">[品詞]</div>
+            <div class="answer-text" id="answer-text">答え</div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="control-btns">
+            <button class="action-btn show-btn" id="show-btn" onclick="showAnswer()">答えを見る</button>
+            <button class="action-btn next-btn" id="next-btn" onclick="nextQuestion()">次へ進む ▶</button>
+        </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="result-screen">
+        <div class="question-text">お疲れ様でした！</div>
+        <div class="progress">15問の学習が完了しました。</div>
+        <button class="action-btn restart-btn" onclick="restartQuiz()">もう一度学習する</button>
+    </div>
+</div>
+
+<script>
+// 全137単語データ
+const wordList = [
+    // === PROGRAM 1 ===
+    { word: "plan(s)", meaning: "予定、計画", part: "名" },
+    { word: "will", meaning: "〜でしょう、〜するつもりだ、〜しようと思う", part: "助" },
+    { word: "late", meaning: "（時刻が）遅い、遅刻して", part: "形" },
+    { word: "soon", meaning: "すぐに", part: "副" },
+    { word: "quiz", meaning: "小テスト、クイズ", part: "名" },
+    { word: "camp", meaning: "キャンプする", part: "動" },
+    { word: "nothing", meaning: "何も〜ない", part: "代" },
+    { word: "move", meaning: "引っ越す", part: "動" },
+    { word: "farewell", meaning: "別れの、送別の", part: "形" },
+    { word: "party", meaning: "パーティー、会", part: "名" },
+    { word: "by the way", meaning: "ところで", part: "連語" },
+    { word: "What's up?", meaning: "どうしたの。", part: "連語" },
+    { word: "You're kidding.", meaning: "冗談でしょう。まさか。", part: "連語" },
+    { word: "again", meaning: "再び、また", part: "副" },
+    { word: "special", meaning: "特別な", part: "形" },
+    { word: "leave", meaning: "出発する、去る", part: "動" },
+    { word: "care", meaning: "注意、用心", part: "名" },
+    { word: "local", meaning: "地元の、（ある）地方の、現地の", part: "形" },
+    { word: "bit", meaning: "少量、小片", part: "名" },
+    { word: "worried", meaning: "心配して、不安な", part: "形" },
+    { word: "hope", meaning: "望む、希望する", part: "動" },
+    { word: "forget", meaning: "忘れる", part: "動" },
+    { word: "either", meaning: "（否定文で）〜もまた（…ない）", part: "副" },
+    { word: "keep", meaning: "（ある状態）のままでいる", part: "動" },
+    { word: "text", meaning: "（携帯電話で）メールを送る", part: "動" },
+    { word: "take care", meaning: "気をつける、注意する", part: "連語" },
+    { word: "a bit", meaning: "少し", part: "連語" },
+    { word: "keep in touch", meaning: "連絡をとり続ける", part: "連語" },
+    { word: "cry, cried", meaning: "泣く", part: "動" },
+    { word: "overseas", meaning: "海外で［に、へ］", part: "副" },
+    { word: "Thanks for ~.", meaning: "〜をありがとう。", part: "連語" },
+    { word: "do one's best", meaning: "最善［ベスト］をつくす", part: "連語" },
+    { word: "picnic", meaning: "ピクニック", part: "名" },
+    { word: "maybe", meaning: "たぶん、おそらく", part: "副" },
+    { word: "Why don't you ~?", meaning: "（提案して）〜してはどうですか。", part: "連語" },
+    { word: "Sounds nice.", meaning: "楽しそうですね。", part: "連語" },
+    { word: "amusement park", meaning: "遊園地", part: "名" },
+
+    // === Step 1 for Our Project ===
+    { word: "money", meaning: "お金", part: "名" },
+    { word: "gray", meaning: "灰色（の）", part: "名/形" },
+    { word: "child", meaning: "子ども", part: "名" },
+    { word: "under water", meaning: "水中で［に］", part: "連語" },
+    { word: "short", meaning: "短い", part: "形" },
+
+    // === PROGRAM 2 ===
+    { word: "project", meaning: "プロジェクト、計画", part: "名" },
+    { word: "Africa", meaning: "アフリカ", part: "名" },
+    { word: "free", meaning: "自由な、ひまな", part: "形" },
+    { word: "hear", meaning: "〜だと聞いている", part: "動" },
+    { word: "root", meaning: "応援する、励ます", part: "動" },
+    { word: "easy", meaning: "やさしい、簡単な", part: "形" },
+    { word: "difficult", meaning: "難しい", part: "形" },
+    { word: "history", meaning: "歴史", part: "名" },
+    { word: "interested", meaning: "興味［関心］のある", part: "形" },
+    { word: "scarf", meaning: "スカーフ、マフラー", part: "名" },
+    { word: "root for ~", meaning: "〜を応援する", part: "連語" },
+    { word: "be interested in ~", meaning: "〜に興味［関心］を持っている", part: "連語" },
+    { word: "cheering", meaning: "励ましの", part: "形" },
+    { word: "flag", meaning: "旗", part: "名" },
+    { word: "program", meaning: "番組、プログラム", part: "名" },
+    { word: "if", meaning: "もし〜ならば", part: "接" },
+    { word: "hit", meaning: "打つ《過去形・過去分詞も同形》", part: "動" },
+    { word: "home run", meaning: "ホームラン", part: "名" },
+    { word: "cycle", meaning: "自転車に乗る、サイクリングをする", part: "動" },
+    { word: "rain(s)", meaning: "雨が降る", part: "動" },
+    { word: "go cycling", meaning: "サイクリングに行く", part: "連語" },
+    { word: "eraser", meaning: "消しゴム", part: "名" },
+    { word: "shirt", meaning: "シャツ", part: "名" },
+    { word: "promote, promoting", meaning: "促進する", part: "動" },
+    { word: "successful", meaning: "成功した", part: "形" },
+    { word: "championship", meaning: "選手権（大会）", part: "名" },
+    { word: "passionate", meaning: "情熱的な", part: "形" },
+    { word: "person", meaning: "名人、個人", part: "名" },
+    { word: "take place", meaning: "開催される、起こる", part: "連語" },
+    { word: "professionally", meaning: "プロとして", part: "副" },
+    { word: "university", meaning: "（総合）大学", part: "名" },
+    { word: "coach(ed)", meaning: "コーチ［指導］する", part: "動" },
+    { word: "national", meaning: "国の", part: "形" },
+    { word: "believe(s)", meaning: "信じる、思う", part: "動" },
+    { word: "create", meaning: "作り出す、生み出す", part: "動" },
+    { word: "peace", meaning: "平和", part: "名" },
+    { word: "teach", meaning: "教える", part: "動" },
+    { word: "goal(s)", meaning: "ゴール、目標", part: "名" },
+    { word: "education", meaning: "教育", part: "名" },
+    { word: "foster", meaning: "育てる", part: "動" },
+
+    // === PROGRAM 2 後半 & Power-Up / Step 2 ===
+    { word: "sportsmanship", meaning: "スポーツマンシップ［精神］", part: "名" },
+    { word: "through", meaning: "（手段・経験）を通じて", part: "前" },
+    { word: "fact", meaning: "事実", part: "名" },
+    { word: "as", meaning: "〜として", part: "前" },
+    { word: "tool", meaning: "道具", part: "名" },
+    { word: "learn", meaning: "学ぶ、習う", part: "動" },
+    { word: "manner(s)", meaning: "（複数形で）行儀、マナー", part: "名" },
+    { word: "effect(s)", meaning: "効果、影響", part: "名" },
+    { word: "power", meaning: "力、影響力", part: "名" },
+    { word: "one of ~", meaning: "〜のうちの1つ［1人］", part: "連語" },
+    { word: "in fact", meaning: "実のところ、実際は", part: "連語" },
+    { word: "believe in ~", meaning: "〜（可能性・存在）を信じる", part: "連語" },
+    { word: "remember", meaning: "覚えている、思い出す", part: "動" },
+    { word: "swimming", meaning: "水泳", part: "名" },
+    { word: "field day", meaning: "運動会（の日）", part: "名" },
+    { word: "contest", meaning: "コンテスト、競技（会）", part: "名" },
+    { word: "forecast", meaning: "予報、予想", part: "名" },
+    { word: "windy", meaning: "風の強い、風のある", part: "形" },
+    { word: "degree(s)", meaning: "度（温度の単位）", part: "名" },
+    { word: "coat", meaning: "コート、オーバー", part: "名" },
+    { word: "raincoat", meaning: "レインコート", part: "名" },
+    { word: "later", meaning: "あとで、後に", part: "副" },
+    { word: "minus", meaning: "マイナスの", part: "形" },
+    { word: "temperature", meaning: "温度、気温", part: "名" },
+    { word: "recommend", meaning: "勧める、推薦する", part: "動" },
+    { word: "should", meaning: "〜すべきだ、〜したほうがよい", part: "助" },
+    { word: "burger", meaning: "ハンバーガー、〜バーガー", part: "名" },
+    { word: "revolution", meaning: "革命、大変革", part: "名" },
+    { word: "check", meaning: "調べる、確かめる", part: "動" },
+    { word: "healthy", meaning: "健康によい、健康な", part: "形" },
+
+    // === PROGRAM 3 ===
+    { word: "taste", meaning: "味、経験", part: "名" },
+    { word: "culture", meaning: "文化", part: "名" },
+    { word: "wait", meaning: "待つ", part: "動" },
+    { word: "light", meaning: "軽い", part: "形" },
+    { word: "scoop", meaning: "すくい上げる［取る］", part: "動" },
+    { word: "thin", meaning: "（厚さが）薄い", part: "形" },
+    { word: "Here is ~.", meaning: "（人に物を差し出して）はい、〜をどうぞ。こちらが〜です。", part: "連語" },
+    { word: "scoop up ~", meaning: "〜をすくい上げる", part: "連語" },
+    { word: "for the first time", meaning: "初めて", part: "連語" },
+    { word: "caught", meaning: "catch（つかまえる）の過去形《過去分詞も同形》", part: "動" },
+    { word: "job", meaning: "仕事", part: "名" },
+    { word: "bowl", meaning: "どんぶり、わん", part: "名" },
+    { word: "Good job.", meaning: "よくやったね。", part: "連語" },
+    { word: "festival", meaning: "祭り", part: "名" },
+    { word: "shoe(s)", meaning: "（ふつう複数形で）靴", part: "名" },
+    { word: "racket", meaning: "ラケット", part: "名" },
+    { word: "present", meaning: "プレゼント、贈り物", part: "名" },
+    { word: "garden", meaning: "花だん", part: "名" },
+    { word: "catch", meaning: "つかまえる", part: "動" },
+    { word: "white", meaning: "白（い）", part: "名/形" },
+    { word: "soft", meaning: "柔らかい", part: "形" },
+    { word: "cheese", meaning: "チーズ", part: "名" },
+    { word: "corn dog", meaning: "アメリカンドッグ", part: "名" },
+    { word: "cotton candy", meaning: "綿あめ", part: "名" },
+    { word: "lemonade", meaning: "レモネード", part: "名" },
+    { word: "themselves", meaning: "彼ら自身", part: "代" },
+    { word: "sell", meaning: "売る", part: "動" },
+    { word: "earn", meaning: "得る、かせぐ", part: "動" },
+    { word: "sometime", meaning: "いつか", part: "副" },
+    { word: "forward", meaning: "前へ", part: "副" },
+    { word: "by oneself", meaning: "自力で、ひとりで", part: "連語" },
+    { word: "sometime soon", meaning: "そのうちすぐ", part: "連語" },
+    { word: "look forward to ~", meaning: "〜を楽しみに待つ", part: "連語" },
+    { word: "toothpick(s)", meaning: "つまようじ", part: "名" },
+    { word: "each", meaning: "それぞれの", part: "形" },
+    { word: "Some ~, Others ....", meaning: "〜もいれば、…もいる。", part: "連語" },
+    { word: "smell", meaning: "におい、香り", part: "名" },
+    { word: "easily", meaning: "簡単に", part: "副" },
+    { word: "handmade", meaning: "手作りの", part: "形" },
+
+    // === Our Project 4 & PROGRAM 3 後半 ===
+    { word: "donate", meaning: "寄付する", part: "動" },
+    { word: "ingredient(s)", meaning: "（料理の）材料", part: "名" },
+    { word: "flour", meaning: "小麦粉", part: "名" },
+    { word: "organic", meaning: "有機栽培［農法］の", part: "形" },
+    { word: "add", meaning: "付け加える", part: "動" },
+    { word: "topping(s)", meaning: "トッピング", part: "名" },
+    { word: "such", meaning: "そのような", part: "形" },
+    { word: "spinach", meaning: "ホウレンソウ", part: "名" },
+    { word: "butter", meaning: "バター", part: "名" },
+    { word: "customize", meaning: "好みに合わせて変える", part: "動" },
+    { word: "amount", meaning: "量", part: "名" },
+    { word: "eater", meaning: "食べる人［動物］", part: "名" },
+    { word: "gram(s)", meaning: "（重さの単位）グラム", part: "名" },
+    { word: "such as ~", meaning: "たとえば〜など", part: "連語" },
+    { word: "thick", meaning: "（液体などが）濃い、こってりした", part: "形" },
+    { word: "spicy", meaning: "辛い、スパイスのきいた", part: "形" },
+    { word: "creamy", meaning: "クリーム状の、なめらかな", part: "形" },
+    { word: "bone", meaning: "骨", part: "名" },
+    { word: "miso-flavored", meaning: "みそ味［風味］の", part: "形" },
+    { word: "soy sauce-flavored", meaning: "しょうゆ味［風味］の", part: "形" },
+    { word: "bean sprout(s)", meaning: "もやし", part: "名" },
+    { word: "slice(s)", meaning: "（うすく切った）1切れ", part: "名" },
+    { word: "roast", meaning: "焼いた、あぶった", part: "形" },
+    { word: "noodle(s)", meaning: "（ふつう複数形で）めん類", part: "名" },
+    { word: "farmer(s)", meaning: "農場主、農民", part: "名" },
+    { word: "cabbage", meaning: "キャベツ", part: "名" }
+];
+
+let currentQuestions = [];
+let currentIdx = 0;
+let currentMode = 'jp-to-en'; // デフォルトは「日本語 ➔ 英語」
+
+function startQuiz() {
+    // 全データからランダムに15問抽出してシャッフル
+    let shuffled = [...wordList].sort(() => 0.5 - Math.random());
+    currentQuestions = shuffled.slice(0, 15);
+    currentIdx = 0;
+    
+    document.getElementById("game-screen").style.display = "block";
+    document.getElementById("result-screen").style.display = "none";
+    
+    showQuestion();
+}
+
+function showQuestion() {
+    document.getElementById("card").classList.remove("show-answer");
+    document.getElementById("show-btn").style.display = "block";
+    document.getElementById("next-btn").style.display = "none";
+
+    const currentQ = currentQuestions[currentIdx];
+    
+    document.getElementById("progress").innerText = `${currentIdx + 1} / ${currentQuestions.length}`;
+    document.getElementById("hint-text").innerText = `[${currentQ.part}]`;
+    
+    // モードによって問題と答えを入れ替える
+    if (currentMode === 'jp-to-en') {
+        document.getElementById("question-text").innerText = currentQ.meaning;
+        document.getElementById("answer-text").innerText = currentQ.word;
+    } else {
+        document.getElementById("question-text").innerText = currentQ.word;
+        document.getElementById("answer-text").innerText = currentQ.meaning;
+    }
+}
+
+function showAnswer() {
+    document.getElementById("card").classList.add("show-answer");
+    document.getElementById("show-btn").style.display = "none";
+    document.getElementById("next-btn").style.display = "block";
+}
+
+function nextQuestion() {
+    currentIdx++;
+    if (currentIdx < currentQuestions.length) {
+        showQuestion();
+    } else {
+        showResult();
+    }
+}
+
+function showResult() {
+    document.getElementById("game-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+}
+
+function restartQuiz() {
+    startQuiz();
+}
+
+// モード切り替え
+function changeMode(mode) {
+    if (currentMode === mode) return;
+    
+    currentMode = mode;
+    
+    // スイッチの見た目を更新
+    document.getElementById("mode-jp-to-en").classList.toggle("active", mode === 'jp-to-en');
+    document.getElementById("mode-en-to-jp").classList.toggle("active", mode === 'en-to-jp');
+    
+    // 現在のセットのまま1問目から再スタート
+    startQuiz();
+}
+
+window.onload = startQuiz;
+</script>
+
+</body>
+</html>
